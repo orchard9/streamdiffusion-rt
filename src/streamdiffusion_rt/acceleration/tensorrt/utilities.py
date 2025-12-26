@@ -427,6 +427,7 @@ def export_onnx(
             input_names=model_data.get_input_names(),
             output_names=model_data.get_output_names(),
             dynamic_axes=model_data.get_dynamic_axes(),
+            dynamo=False,  # Force legacy ONNX export for PyTorch 2.x compatibility
         )
     del model
     gc.collect()
