@@ -1,10 +1,17 @@
 from typing import *
 
 import torch
-from diffusers.models.autoencoder_tiny import AutoencoderTinyOutput
-from diffusers.models.unet_2d_condition import UNet2DConditionOutput
-from diffusers.models.vae import DecoderOutput
 from polygraphy import cuda
+
+# FORK: Support both old and new diffusers API
+try:
+    from diffusers.models.autoencoder_tiny import AutoencoderTinyOutput
+    from diffusers.models.unet_2d_condition import UNet2DConditionOutput
+    from diffusers.models.vae import DecoderOutput
+except ImportError:
+    from diffusers.models.autoencoders.autoencoder_tiny import AutoencoderTinyOutput
+    from diffusers.models.unets.unet_2d_condition import UNet2DConditionOutput
+    from diffusers.models.autoencoders.vae import DecoderOutput
 
 from .utilities import Engine
 
