@@ -43,8 +43,11 @@ def benchmark_diffusion(
     print(f"Warmup: {warmup_frames}")
 
     # Initialize processor
+    # Note: Use SD1.5-based model for compatibility. SDXL-Turbo has API changes
+    # that require additional work to support with current diffusers version.
     print("\nInitializing processor...")
     processor = StreamDiffusionProcessor(
+        model_id="KBlueLeaf/kohaku-v2.1",  # SD1.5-based model for compatibility
         use_tensorrt=use_tensorrt,
         width=resolution,
         height=resolution,
