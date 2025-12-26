@@ -27,7 +27,11 @@ import onnx
 import onnx_graphsurgeon as gs
 import tensorrt as trt
 import torch
-from cuda import cudart
+# FORK: Support both old and new cuda-python API
+try:
+    from cuda import cudart  # cuda-python < 13.0
+except ImportError:
+    from cuda.bindings import runtime as cudart  # cuda-python >= 13.0
 from PIL import Image
 from polygraphy import cuda
 from polygraphy.backend.common import bytes_from_path
