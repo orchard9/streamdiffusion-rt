@@ -27,7 +27,7 @@ dependencies = [
     "transformers>=4.35.0",
     "accelerate>=0.24.0",
     "xformers",
-    "onnx>=1.15.0",
+    "onnx>=1.15.0,<1.17.0",  # Pin to avoid onnx-graphsurgeon incompatibility
     "onnxruntime>=1.16.0",
     "protobuf>=4.25.0",
     "pillow>=9.0.0",
