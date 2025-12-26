@@ -128,7 +128,7 @@ class StreamDiffusionProcessor:
         model_id: str = "stabilityai/sdxl-turbo",
         t_index_list: Optional[List[int]] = None,
         use_tensorrt: bool = True,
-        engine_cache_dir: str = "/opt/masq/models/tensorrt_cache/diffusion",
+        engine_cache_dir: Optional[str] = None,
         width: int = 768,
         height: int = 768,
     ):
@@ -182,10 +182,29 @@ class StreamDiffusionProcessor:
         Loads SDXL-Turbo model and optionally builds TensorRT engines.
         This can take several minutes for first-time TensorRT compilation.
         """
+        import os
+
         if self._is_ready:
             return
 
         acceleration = "tensorrt" if self._use_tensorrt else "xformers"
+
+        # Use sensible default for engine cache dir
+        engine_dir = self._engine_cache_dir
+        if engine_dir is None:
+            # Try common locations in order of preference
+            candidates = [
+                "/opt/masq/models/tensorrt_cache/diffusion",
+                os.path.expanduser("~/.cache/streamdiffusion-rt/engines"),
+                "engines",  # Fallback to current directory
+            ]
+            for candidate in candidates:
+                try:
+                    os.makedirs(candidate, exist_ok=True)
+                    engine_dir = candidate
+                    break
+                except PermissionError:
+                    continue
 
         self._stream = StreamDiffusionWrapper(
             model_id_or_path=self._model_id,
@@ -195,7 +214,7 @@ class StreamDiffusionProcessor:
             width=self._width,
             height=self._height,
             acceleration=acceleration,
-            engine_dir=self._engine_cache_dir,
+            engine_dir=engine_dir,
         )
 
         self._is_ready = True
@@ -266,11 +285,13 @@ class StreamDiffusionProcessor:
         # Get temporal state from context (unused currently - StreamDiffusion manages internally)
         # x_t_latent = context.processor_state.get("diffusion_x_t_latent")
 
-        # Run img2img diffusion
-        output = self._stream.stream.img2img(frame_torch)
+        # Run img2img diffusion via wrapper
+        # The wrapper's img2img method handles preprocessing/postprocessing
+        # For output_type="pt", we get raw tensor back
+        output = self._stream.img2img(frame_torch)
 
-        # Store temporal state for next frame
-        if hasattr(self._stream.stream, "x_t_latent_buffer"):
+        # Store temporal state for next frame (if available)
+        if hasattr(self._stream, "stream") and hasattr(self._stream.stream, "x_t_latent_buffer"):
             context.processor_state["diffusion_x_t_latent"] = (
                 self._stream.stream.x_t_latent_buffer
             )
