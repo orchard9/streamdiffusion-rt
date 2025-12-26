@@ -7,7 +7,7 @@ name = "streamdiffusion-rt"
 version = "0.1.0"
 description = "Real-time optimized fork of StreamDiffusion for GPU streaming pipelines"
 readme = "README.md"
-license = "Apache-2.0"
+license = {text = "Apache-2.0"}
 requires-python = ">=3.10"
 authors = [
     { name = "Orchard9", email = "dev@orchard9.com" }
