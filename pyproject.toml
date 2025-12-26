@@ -23,7 +23,7 @@ classifiers = [
 dependencies = [
     "torch>=2.0.0",
     "torchvision>=0.15.0",
-    "diffusers>=0.24.0",
+    "diffusers>=0.24.0,<0.30.0",  # Pin for TensorRT ONNX export compatibility
     "transformers>=4.35.0",
     "accelerate>=0.24.0",
     "xformers",
