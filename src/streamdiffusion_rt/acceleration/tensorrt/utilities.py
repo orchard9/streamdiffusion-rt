@@ -43,7 +43,7 @@ from polygraphy.backend.trt import (
     network_from_onnx_path,
     save_engine,
 )
-from polygraphy.backend.trt import util as trt_util
+# Removed: from polygraphy.backend.trt import util as trt_util (deprecated APIs)
 
 from .models import CLIP, VAE, BaseModel, UNet, VAEEncoder
 
@@ -250,17 +250,18 @@ class Engine:
             self.context = self.engine.create_execution_context()
 
     def allocate_buffers(self, shape_dict=None, device="cuda"):
-        for idx in range(trt_util.get_bindings_per_profile(self.engine)):
-            binding = self.engine[idx]
-            if shape_dict and binding in shape_dict:
-                shape = shape_dict[binding]
+        # Use modern TensorRT 10+ API (num_io_tensors instead of deprecated bindings)
+        for idx in range(self.engine.num_io_tensors):
+            name = self.engine.get_tensor_name(idx)
+            if shape_dict and name in shape_dict:
+                shape = shape_dict[name]
             else:
-                shape = self.engine.get_binding_shape(binding)
-            dtype = trt.nptype(self.engine.get_binding_dtype(binding))
-            if self.engine.binding_is_input(binding):
-                self.context.set_binding_shape(idx, shape)
+                shape = self.engine.get_tensor_shape(name)
+            dtype = trt.nptype(self.engine.get_tensor_dtype(name))
+            if self.engine.get_tensor_mode(name) == trt.TensorIOMode.INPUT:
+                self.context.set_input_shape(name, shape)
             tensor = torch.empty(tuple(shape), dtype=numpy_to_torch_dtype_dict[dtype]).to(device=device)
-            self.tensors[binding] = tensor
+            self.tensors[name] = tensor
 
     def infer(self, feed_dict, stream, use_cuda_graph=False):
         for name, buf in feed_dict.items():
